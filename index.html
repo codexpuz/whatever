@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Suhbat</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+
+      body {
+        margin: 0;
+        padding: 1em;
+        padding-bottom: 3rem;
+        font-family: Inter, Verdana, sans-serif;
+        background-color: #f0f0f0;
+      }
+
+      #chat-container {
+        max-width: 600px;
+        margin: 3em auto;
+        padding: 1rem;
+        border-radius: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #144;
+        background-color: #ffffff;
+      }
+
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 20px;
+      }
+
+      #messages > li {
+        padding: 0.5rem 1rem;
+        margin: 0.5rem;
+        border-radius: 5px;
+      }
+
+      #messages > li:nth-child(odd) {
+        background: #efefef;
+      }
+
+      #form {
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        box-sizing: border-box;
+        border-top: 1px solid #ddd;
+      }
+
+      #input {
+        border: none;
+        padding: 0.6rem;
+        flex-grow: 1;
+        border-radius: 5px;
+        margin-right: 1rem;
+        border: 1px solid #144;
+        font-family: Inter;
+      }
+
+      #input:focus {
+        outline: none;
+      }
+
+      #form > button {
+        font-family: Inter;
+        background: #144;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        outline: none;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      #messages > li.admin-message {
+        background-color: #fff1cc;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat-container">
+      <ul id="messages"></ul>
+      <form id="form" action="">
+        <input
+          id="input"
+          autocomplete="off"
+          placeholder="Savol yoki muommolarni yozing..."
+        />
+        <button>Yuborish</button>
+      </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      let counter = 0;
+
+      const socket = io({
+        auth: {
+          serverOffset: 0,
+        },
+        ackTimeout: 10000,
+        retries: 3,
+      });
+
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value) {
+          const clientOffset = `${socket.id}-${counter++}`;
+          socket.emit("chat message", input.value, clientOffset);
+          input.value = "";
+        }
+      });
+
+      socket.on("chat message", (msg, serverOffset) => {
+        const item = document.createElement("li");
+
+        if (msg.includes("admin:khumoyun")) {
+          item.classList.add("admin-message");
+          item.innerHTML = msg.replace("admin:khumoyun", "ADMIN: ")
+        } else {
+          item.textContent = msg;
+        }
+
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+        socket.auth.serverOffset = serverOffset;
+      });
+    </script>
+  </body>
+</html>

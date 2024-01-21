@@ -63,7 +63,7 @@ if (cluster.isPrimary) {
         );
       } catch (e) {
         if (e.errno === 19 /* SQLITE_CONSTRAINT */) {
-          callback();
+          callback || callback();
         } else {
           // nothing to do, just let the client retry
         }
